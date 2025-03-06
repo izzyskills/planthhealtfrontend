@@ -12,6 +12,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { Toaster } from "./components/ui/sonner";
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -40,6 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <main className="flex-grow">{children}</main>
           <ScrollRestoration />
           <Footer />
+          <Toaster />
           <Scripts />
         </div>
       </body>

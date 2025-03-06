@@ -1,3 +1,4 @@
+import { LoginForm } from "~/components/Forms/login-form";
 import type { Route } from "./+types/login";
 
 export function meta({}: Route.MetaArgs) {
@@ -8,5 +9,11 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
-  return <h1>Login</h1>;
+  return (
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <LoginForm />
+      </div>
+    </div>
+  );
 }
