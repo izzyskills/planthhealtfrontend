@@ -1,5 +1,6 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -9,7 +10,8 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -33,9 +35,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-grow">{children}</main>
+          <ScrollRestoration />
+          <Footer />
+          <Scripts />
+        </div>
       </body>
     </html>
   );
@@ -70,6 +76,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
           <code>{stack}</code>
         </pre>
       )}
+
+      <p>
+        <Link to="/">Go back home</Link>
+      </p>
     </main>
   );
 }
