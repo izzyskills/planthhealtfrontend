@@ -6,4 +6,5 @@ export default [
   route("login", "routes/login.tsx"),
   route("signup", "routes/signup.tsx"),
   route("classify", "routes/classify.tsx"),
+  route("predictions", "routes/previousClassifications.tsx"),
 ] satisfies RouteConfig;

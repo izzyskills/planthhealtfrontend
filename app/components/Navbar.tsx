@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Leaf } from "lucide-react";
+import { Leaf, History } from "lucide-react";
 
 const Navbar = () => {
   return (
@@ -9,12 +9,18 @@ const Navbar = () => {
           <Leaf size={24} />
           <span className="text-xl font-bold">PlantHealth</span>
         </Link>
-        <div className="space-x-6">
+        <div className="space-x-6  flex flex-row">
           <Link to="/" className="hover:text-green-200">
             Home
           </Link>
           <Link to="/classify" className="hover:text-green-200">
             Classifier
+          </Link>
+          <Link to="/predictions" className="hover:text-green-200">
+            <div className="flex items-center">
+              <History size={16} className="mr-1" />
+              <span>History</span>
+            </div>
           </Link>
           <Link to="/about" className="hover:text-green-200">
             About
