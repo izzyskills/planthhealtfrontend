@@ -14,6 +14,10 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { Toaster } from "./components/ui/sonner";
 import { PredictionProvider } from "./context/PredictionContext";
+import { AuthProvider } from "./context/AuthContext";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./api/api";
+import { ThemeProvider } from "./context/ThemeProvider";
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -38,13 +42,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <div className="min-h-screen flex flex-col">
-          <PredictionProvider>
-            <Navbar />
-            <main className="flex-grow">{children}</main>
-            <ScrollRestoration />
-            <Footer />
-            <Toaster />
-          </PredictionProvider>
+          <AuthProvider>
+            <ThemeProvider storageKey="vite-ui-theme">
+              <PredictionProvider>
+                <QueryClientProvider client={queryClient}>
+                  <Navbar />
+                  <main className="flex-grow">{children}</main>
+                  <ScrollRestoration />
+                  <Footer />
+                  <Toaster />
+                </QueryClientProvider>
+              </PredictionProvider>
+            </ThemeProvider>
+          </AuthProvider>
           <Scripts />
         </div>
       </body>
