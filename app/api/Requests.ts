@@ -2,11 +2,11 @@ import { apiClient, queryClient } from "./api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router";
 import { jwtDecode } from "jwt-decode";
-import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { toast } from "sonner";
-import type { Prediction } from "~/types";
+import type { Prediction, PredictionRequest } from "~/types";
 import { handleErrors } from "./utils";
 import { useAuth } from "~/context/AuthContext";
+import useAxiosPrivate from "~/hooks/useAxiosPrivate";
 
 interface LoginFormData {
   email: string;
@@ -16,14 +16,14 @@ interface LoginFormData {
 interface SignupFormData {
   email: string;
   password: string;
-  name?: string;
+  fullname: string;
 }
 
 interface DecodedToken {
   user: {
-    user_uid: string;
+    user_id: string;
     email: string;
-    name?: string;
+    fullname?: string;
   };
   exp: number;
 }
@@ -31,7 +31,7 @@ interface DecodedToken {
 interface AuthResponse {
   access_token: string;
   user: {
-    user_uid: string;
+    user_id: string;
     email: string;
     name?: string;
   };
@@ -40,7 +40,7 @@ interface AuthResponse {
 export function useLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || "/dashboard";
+  const from = location.state?.from?.pathname || "/classify";
   const { setAuth } = useAuth();
 
   return useMutation({
@@ -56,13 +56,16 @@ export function useLogin() {
       const token = res.data.access_token;
       const decodedToken = jwtDecode<DecodedToken>(token);
       const user = decodedToken.user;
+      console.log("User", user);
+      console.log("Token", token);
       setAuth({ user, token });
-      queryClient.invalidateQueries({ queryKey: ["userdata", user.user_uid] });
+      queryClient.invalidateQueries({ queryKey: ["userdata", user.user_id] });
       toast("Login Successful");
       navigate(from, { replace: true });
     },
     onError: (err) => {
-      handleErrors(err.message || null);
+      console.error(err);
+      handleErrors(err.response?.data?.message || null);
     },
   });
 }
@@ -73,8 +76,8 @@ export function useSignup() {
   return useMutation({
     mutationFn: async (formData: SignupFormData) => {
       const response = await apiClient.post<{
-        user: { email: string; user_uid: string };
-      }>(`auth/signup`, formData, {
+        user: { email: string; user_id: string };
+      }>(`auth/register`, formData, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -91,7 +94,8 @@ export function useSignup() {
       navigate("/login");
     },
     onError: (err) => {
-      handleErrors(err.message || null);
+      console.error(err);
+      handleErrors(err.response?.data?.message || null);
     },
   });
 }
@@ -118,12 +122,13 @@ export function useLogout() {
       localStorage.removeItem("authState");
     },
     onError: (err) => {
-      handleErrors(err.message || null);
+      console.error(err);
+      handleErrors(err.response?.data?.message || null);
     },
   });
 }
 
-// New function to get last 5 predictions
+// Function to get recent predictions
 export function useGetPredictions() {
   const apiClientPrivate = useAxiosPrivate();
 
@@ -131,7 +136,7 @@ export function useGetPredictions() {
     queryKey: ["predictions"],
     queryFn: async () => {
       const response = await apiClientPrivate.get<Prediction[]>(
-        "/predictions/recent"
+        "/predictions/predictions"
       );
       return response.data;
     },
@@ -142,25 +147,21 @@ export function useGetPredictions() {
   });
 }
 
-// New function to submit a prediction request
-export interface PredictionRequest {
-  image: File;
-  plant?: string;
-}
-
 export function useSubmitPrediction() {
   const apiClientPrivate = useAxiosPrivate();
 
   return useMutation({
     mutationFn: async (data: PredictionRequest) => {
       const formData = new FormData();
-      formData.append("image", data.image);
+      // Make sure to use the field name that the API expects (file instead of image)
+      formData.append("file", data.image);
       if (data.plant) {
         formData.append("plant", data.plant);
       }
 
+      // Update the endpoint to match your API router
       const response = await apiClientPrivate.post<Prediction>(
-        "/predictions/analyze",
+        "/predictions/", // Make sure this matches your backend route
         formData,
         {
           headers: {
@@ -173,9 +174,31 @@ export function useSubmitPrediction() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["predictions"] });
       toast("Analysis completed successfully");
+      return data;
     },
     onError: (err) => {
-      handleErrors(err.message || null);
+      console.error("Prediction submission error:", err);
+      handleErrors(err.response?.data?.message || null);
     },
   });
 }
+// // Function to get a specific prediction by ID
+// export function useGetPrediction(predictionId: string | null) {
+//   const apiClientPrivate = useAxiosPrivate();
+//
+//   return useQuery({
+//     queryKey: ["prediction", predictionId],
+//     queryFn: async () => {
+//       if (!predictionId) return null;
+//       const response = await apiClientPrivate.get<Prediction>(
+//         `/predictions/${predictionId}`
+//       );
+//       return response.data;
+//     },
+//     enabled: !!predictionId,
+//     retry(failureCount, error) {
+//       if (error.status === 404) return false;
+//       return failureCount < 3;
+//     },
+//   });
+// }

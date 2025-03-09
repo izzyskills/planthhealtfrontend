@@ -1,7 +1,6 @@
 import axios from "axios";
 import { QueryClient } from "@tanstack/react-query";
-const baseURL = import.meta.env.VITE_REACT_APP_API_BASE_URL;
-console.log(baseURL);
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const apiClient = axios.create({
   baseURL: `${baseURL}` || "http://localhost:4000",
 });
@@ -13,4 +12,4 @@ const apiClientPrivate = axios.create({
 });
 const queryClient = new QueryClient();
 
-export { apiClient, queryClient, apiClientPrivate };
+export { apiClient, queryClient, apiClientPrivate, baseURL };
