@@ -8,11 +8,11 @@ export interface Prediction {
   date: string;
   plant: string;
   description: string;
-  treatment: string;
+  treatments: string[] | string;
 }
 
 export interface User {
-  user_uid: string;
+  user_id: string;
   [key: string]: any; // Allow for additional user properties
 }
 
@@ -30,4 +30,9 @@ export interface AuthContextType {
   isLoggedIn: boolean;
   user: User | null;
   logout: () => Promise<void>;
+}
+// Function to submit a prediction request
+export interface PredictionRequest {
+  image: File;
+  plant?: string;
 }

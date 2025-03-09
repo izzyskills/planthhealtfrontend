@@ -1,20 +1,23 @@
-import { useState } from "react";
-import { Upload } from "lucide-react";
-import { usePredictions } from "../context/PredictionContext";
-import type { Prediction } from "../types";
+import { useState, useRef } from "react";
+import { Loader2, Upload } from "lucide-react";
+import type { Prediction, PredictionRequest } from "../types";
 import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import { useSubmitPrediction } from "~/api/Requests";
 
 const ClassifierPage = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const { addPrediction } = usePredictions();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [result, setResult] = useState<Prediction | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const submitPredictionMutation = useSubmitPrediction();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onload = () => {
         setSelectedImage(reader.result as string);
@@ -24,38 +27,33 @@ const ClassifierPage = () => {
     }
   };
 
-  const analyzeImage = () => {
-    if (!selectedImage) return;
+  const analyzeImage = async () => {
+    if (!selectedFile) return;
 
-    setIsAnalyzing(true);
-    // This would be replaced with your actual API call
-    setTimeout(() => {
-      const newResult = {
-        disease: "Powdery Mildew",
-        confidence: 94.5,
-        description:
-          "Powdery mildew is a fungal disease that affects a wide range of plants. It appears as a white to gray powdery growth on leaf surfaces, stems, and sometimes fruit.",
-        treatment:
-          "Apply fungicides containing sulfur or potassium bicarbonate. Remove and destroy infected plant parts. Improve air circulation around plants.",
+    try {
+      const predictionRequest: PredictionRequest = {
+        image: selectedFile,
       };
 
-      setResult(newResult);
+      const result = await submitPredictionMutation.mutateAsync(
+        predictionRequest
+      );
+      setResult(result);
 
-      // Save prediction to history
-      const newPrediction: Prediction = {
-        id: "67101bc6-495a-4ebb-a9cd-70607760820b",
-        image: selectedImage,
-        disease: newResult.disease,
-        confidence: newResult.confidence,
-        date: new Date().toISOString(),
-        plant: "Unidentified Plant", // In a real app, you might detect or ask for the plant type
-        description: newResult.description,
-        treatment: newResult.treatment,
-      };
+      // No longer need to add to prediction context
+      // The mutations should invalidate the predictions query automatically
+    } catch (error) {
+      console.error("Error analyzing image:", error);
+    }
+  };
 
-      addPrediction(newPrediction);
-      setIsAnalyzing(false);
-    }, 2000);
+  const resetForm = () => {
+    setSelectedImage(null);
+    setSelectedFile(null);
+    setResult(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -79,6 +77,7 @@ const ClassifierPage = () => {
                 id="image-upload"
                 className="hidden"
                 onChange={handleImageUpload}
+                ref={fileInputRef}
               />
               <label
                 htmlFor="image-upload"
@@ -109,33 +108,71 @@ const ClassifierPage = () => {
             <div className="text-center">
               <Button
                 onClick={analyzeImage}
-                disabled={isAnalyzing}
+                disabled={submitPredictionMutation.isPending}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {isAnalyzing ? "Analyzing..." : "Analyze Image"}
+                {submitPredictionMutation.isPending ? (
+                  <>
+                    <Loader2 className="animate-spin size-4 mr-2" />
+                    Analyzing...
+                  </>
+                ) : (
+                  "Analyze Image"
+                )}
               </Button>
+              {selectedImage && !submitPredictionMutation.isPending && (
+                <Button onClick={resetForm} variant="outline" className="ml-2">
+                  Reset
+                </Button>
+              )}
             </div>
           )}
 
           {result && (
-            <div className="mt-8 border-t pt-6">
-              <h2 className="text-2xl font-bold mb-4 text-green-700">
+            <div className="mt-8 border-t pt-6 dark:border-gray-700">
+              <h2 className="text-2xl font-bold mb-4 text-green-700 dark:text-green-400">
                 Results
               </h2>
-              <div className="bg-green-50 p-4 rounded-lg">
+              <div className="bg-green-50 p-4 rounded-lg dark:bg-gray-800">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold">{result.disease}</h3>
-                  <Badge className="bg-green-600">
-                    {result.confidence}% Confidence
+                  <h3 className="text-xl font-semibold dark:text-white">
+                    {result.disease}
+                  </h3>
+                  <Badge className="bg-green-600 dark:bg-green-500">
+                    {(result.confidence * 100).toFixed(1)}% Confidence
                   </Badge>
                 </div>
                 <div className="mb-4">
-                  <h4 className="font-medium mb-2">Description:</h4>
-                  <p className="text-gray-700">{result.description}</p>
+                  <h4 className="font-medium mb-2 dark:text-gray-300">
+                    Plant:
+                  </h4>
+                  <p className="text-gray-700 dark:text-gray-400">
+                    {result.plant}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <h4 className="font-medium mb-2 dark:text-gray-300">
+                    Description:
+                  </h4>
+                  <p className="text-gray-700 dark:text-gray-400">
+                    {result.description}
+                  </p>
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2">Treatment:</h4>
-                  <p className="text-gray-700">{result.treatment}</p>
+                  <h4 className="font-medium mb-2 dark:text-gray-300">
+                    Treatments:
+                  </h4>
+                  {Array.isArray(result.treatments) ? (
+                    <ul className="list-disc list-inside text-gray-700 dark:text-gray-400">
+                      {result.treatments.map((treatment, index) => (
+                        <li key={index}>{treatment}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-700 dark:text-gray-400">
+                      {result.treatments}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

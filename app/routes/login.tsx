@@ -10,9 +10,16 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Login() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
+    <div className=" items-center flex flex-col justify-center md:justify-normal md:flex-row">
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center px-8 py-6 sm:mt-12">
         <LoginForm />
+      </div>
+      <div className="w-full md:w-1/2 flex items-center justify-center">
+        <img
+          src="/5464649_2853457.svg"
+          alt="Login Illustration"
+          className="w-full md:block hidden"
+        />
       </div>
     </div>
   );

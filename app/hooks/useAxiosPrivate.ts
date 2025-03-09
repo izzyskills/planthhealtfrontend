@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import useRefreshToken from "./useRefreshToken";
 import { useAuth } from "~/context/AuthContext";
 import { apiClientPrivate } from "~/api/api";
+import useRefreshToken from "./useReresh";
 
 const useAxiosPrivate = () => {
   const refresh = useRefreshToken();
@@ -28,6 +28,7 @@ const useAxiosPrivate = () => {
             const newAccessToken = await refresh();
             if (!newAccessToken) {
               // If new access token is not obtained, clear auth state
+              console.log(authState);
               setAuth({});
               return Promise.reject(error); // Stop retrying the request
             }

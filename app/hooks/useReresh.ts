@@ -1,5 +1,6 @@
 import { apiClient } from "~/api/api";
 import { useAuth } from "~/context/AuthContext";
+import type { AuthState } from "~/types";
 
 const useRefreshToken = () => {
   const { setAuth } = useAuth();
@@ -8,7 +9,7 @@ const useRefreshToken = () => {
     const response = await apiClient.get("auth/refresh_token", {
       withCredentials: true,
     });
-    setAuth((prev) => {
+    setAuth((prev: AuthState) => {
       return { ...prev, token: response.data.accessToken };
     });
     return response.data.accessToken;

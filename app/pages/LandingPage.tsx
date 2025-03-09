@@ -28,7 +28,7 @@ const LandingPage = () => {
               <Card className="p-1">
                 <CardContent className="p-0">
                   <img
-                    src="/api/placeholder/400/300"
+                    src="/5483545.jpg"
                     alt="Plant disease detection"
                     className="rounded"
                   />

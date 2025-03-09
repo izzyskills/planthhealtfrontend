@@ -6,7 +6,6 @@ const RequireAuth = () => {
   const { isLoggedIn } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  console.log("RequireAuth", location);
 
   useEffect(() => {
     if (!isLoggedIn) {

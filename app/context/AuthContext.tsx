@@ -10,23 +10,30 @@ import type { AuthState, AuthProviderProps, AuthContextType } from "~/types";
 // Create context with an initial undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Props type for the AuthProvider
+// Check if we're running in the browser
+const isBrowser = typeof window !== "undefined";
 
+// Props type for the AuthProvider
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  // Initialize auth state from localStorage with proper type checking
+  // Initialize auth state from localStorage with proper type checking and SSR safety
   const [authState, setAuthState] = useState<AuthState>(() => {
-    try {
-      const storedAuth = localStorage.getItem("authState");
-      return storedAuth ? JSON.parse(storedAuth) : {};
-    } catch (error) {
-      console.error("Failed to parse auth state from localStorage:", error);
-      return {};
+    if (isBrowser) {
+      try {
+        const storedAuth = localStorage.getItem("authState");
+        return storedAuth ? JSON.parse(storedAuth) : {};
+      } catch (error) {
+        console.error("Failed to parse auth state from localStorage:", error);
+        return {};
+      }
     }
+    return {}; // Default empty state for SSR
   });
 
-  // Update localStorage when authState changes
+  // Update localStorage when authState changes (only in browser)
   useEffect(() => {
-    localStorage.setItem("authState", JSON.stringify(authState));
+    if (isBrowser) {
+      localStorage.setItem("authState", JSON.stringify(authState));
+    }
   }, [authState]);
 
   // Set auth state with type safety
@@ -45,11 +52,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         },
         credentials: "include",
       });
-
       if (!response.ok) {
         throw new Error("Logout failed");
       }
-
       // Clear auth state after successful logout
       setAuthState({});
     } catch (error) {
@@ -59,7 +64,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   // Computed values with type safety
-  const isLoggedIn = !!authState.user?.user_uid;
+  const isLoggedIn = !!authState.user?.user_id;
   const user = authState.user || null;
 
   // Create the context value object with the correct type
@@ -80,7 +85,6 @@ export const useAuth = (): AuthContextType => {
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  console.log("context", context);
   return context;
 };
 

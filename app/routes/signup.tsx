@@ -17,8 +17,8 @@ export default function Signup(): JSX.Element {
       </div>
       <div className="w-full md:w-1/2 flex items-center justify-center">
         <img
-          src="/admin.png"
-          alt="Admin Login Illustration"
+          src="/7769804_3230318.svg"
+          alt="Signuup Illustration"
           className="w-full md:block hidden"
         />
       </div>

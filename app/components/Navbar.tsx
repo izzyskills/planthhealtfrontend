@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { motion } from "framer-motion";
 import { useAuth } from "~/context/AuthContext";
 import { useTheme } from "~/context/ThemeProvider";
+import { useLogout } from "~/api/Requests";
 
 const Navbar = () => {
   const { isLoggedIn } = useAuth();
@@ -13,6 +14,15 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const location = useLocation();
+  const logout = useLogout();
+  const handleLogout = async () => {
+    try {
+      await logout.mutateAsync();
+      console.log("Logging out...");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -81,7 +91,11 @@ const Navbar = () => {
               <Link to="/classify" className={getLinkClass("/classify")}>
                 Classify
               </Link>
-              <Button variant={"destructive"} className="rounded-full">
+              <Button
+                variant={"destructive"}
+                className="rounded-full"
+                onClick={handleLogout}
+              >
                 Log Out
                 <LogOut className="ml-1 size-4" />
               </Button>
@@ -172,7 +186,10 @@ const Navbar = () => {
                   <Button
                     variant={"destructive"}
                     className="rounded-full"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
                   >
                     Log Out
                     <LogOut className="ml-1 size-4" />
