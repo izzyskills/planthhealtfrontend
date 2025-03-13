@@ -151,7 +151,7 @@ const Navbar = () => {
         >
           <div className="container py-4 flex flex-col gap-4">
             <Link
-              to="/home"
+              to="/"
               className={getLinkClass("/home")}
               onClick={() => setMobileMenuOpen(false)}
             >
